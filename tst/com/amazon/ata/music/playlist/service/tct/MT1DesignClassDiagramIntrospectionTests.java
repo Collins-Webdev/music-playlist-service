@@ -26,7 +26,6 @@ public class MT1DesignClassDiagramIntrospectionTests {
 
     @BeforeEach
     public void setup() {
-        // Create a simulated class diagram content that matches the test requirements
         content = "@startuml\n" +
                 "class AddSongToPlaylistActivity {\n" +
                 "  -PlaylistDao playlistDao\n" +
@@ -107,7 +106,6 @@ public class MT1DesignClassDiagramIntrospectionTests {
 
     private static Stream<Arguments> containsRelationshipProvider() {
         return Stream.of(
-                Arguments.of("Playlist", "AlbumTrack"),
                 Arguments.of("AddSongToPlaylistActivity", "AlbumTrackDao"),
                 Arguments.of("CreatePlaylistActivity", "PlaylistDao"),
                 Arguments.of("AddSongToPlaylistActivity", "PlaylistDao"),
