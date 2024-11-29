@@ -82,6 +82,9 @@ dependencies {
     implementation 'com.google.guava:guava:30.1.1-jre'
 
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0' // or the latest version
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.0' // or the latest version
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0' // or the latest version
 
     implementation files("$rootDir/LibrariesAndUtilities/ATAResources.jar")
     implementation project('LibrariesAndUtilities:LessonPlanResources')
