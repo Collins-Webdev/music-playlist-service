@@ -62,3 +62,4 @@ public class MT2DesignIntrospectionTests {
                         invalidChangeException, invalidValueException));
     }
 }
+
