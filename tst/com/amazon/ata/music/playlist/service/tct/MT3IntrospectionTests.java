@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -42,23 +43,28 @@ public class MT3IntrospectionTests {
 
     @Test
     public void mt03_daggerClasses_correctlyAnnotated() {
+        // Ensure component is annotated with @Component and @Singleton
         assertNotNull(component.getAnnotation(Component.class),
-                String.format("L'interface Component [%s] devrait être annotée avec @Component", component));
+                "Component interface should be annotated with @Component");
         assertNotNull(component.getAnnotation(Singleton.class),
-                String.format("L'interface Component [%s] devrait être annotée avec @Singleton", component));
-        assertNotNull(module.getAnnotation(Module.class),
-                String.format("La classe Module [%s] devrait être annotée avec @Module", module));
+                "Component interface should be annotated with @Singleton");
 
+        // Ensure module is annotated with @Module
+        assertNotNull(module.getAnnotation(Module.class),
+                "Module class should be annotated with @Module");
+
+        // Ensure component includes the module
         assertTrue(ArrayUtils.contains(component.getAnnotation(Component.class).modules(), module),
-                String.format("L'interface Component [%s] devrait enregistrer le module [%s].",
-                        component.getSimpleName(), module.getSimpleName()));
+                "Component should register the module");
 
         log.info("Validation des classes DAO...");
+        // Validate DAO classes
         List<Class<?>> daoClasses = findNonFrameworkClasses("dynamodb", "Dao", Object.class)
                 .collect(Collectors.toList());
         assertClassesAnnotatedWithInject(daoClasses, 2);
 
         log.info("Validation des classes Activity...");
+        // Validate Activity classes
         List<Class<?>> activityClasses = findNonFrameworkClasses("activity", "Activity", RequestHandler.class)
                 .collect(Collectors.toList());
         assertClassesAnnotatedWithInject(activityClasses, 5);
@@ -66,49 +72,55 @@ public class MT3IntrospectionTests {
 
     @Test
     public void mt03_componentClass_providesActivityClasses() {
+        // Ensure component provides methods for all activity classes
         findNonFrameworkClasses("activity", "Activity", RequestHandler.class)
-                .forEach(clazz -> MethodQuery.inType(component).withReturnType(clazz).findMethodOrFail());
+                .forEach(clazz -> {
+                    Method method = MethodQuery.inType(component).withReturnType(clazz).findMethodOrFail();
+                    assertNotNull(method, "Component should provide method for " + clazz.getSimpleName());
+                });
     }
 
     @Test
     public void mt03_module_providesSingletonDynamoDbMapper() {
+        // Find DynamoDBMapper class
         Class<?> dynamoDbMapper = ClassQuery.inExactPackage("com.amazonaws.services.dynamodbv2.datamodeling")
                 .withExactSimpleName("DynamoDBMapper")
                 .findClassOrFail();
 
+        // Find provider method in module
         Method providerMethod = MethodQuery.inType(module).withReturnType(dynamoDbMapper)
                 .findMethodOrFail();
 
+        // Ensure method is annotated with @Provides and @Singleton
         assertNotNull(providerMethod.getAnnotation(Provides.class),
-                String.format("La méthode [%s] dans le Module [%s] devrait être annotée avec @Provides",
-                        providerMethod.getName(), module.getSimpleName()));
+                "Method in Module should be annotated with @Provides");
         assertNotNull(providerMethod.getAnnotation(Singleton.class),
-                String.format("La méthode [%s] dans le Module [%s] devrait être annotée avec @Singleton",
-                        providerMethod.getName(), module.getSimpleName()));
+                "Method in Module should be annotated with @Singleton");
     }
 
     @Test
     public void mt03_appClass_deleted() {
+        // Ensure App class is deleted
         Set<Class<?>> classes = ClassQuery.inExactPackage(BASE_PACKAGE + "dependency")
                 .withExactSimpleName("App")
                 .findClasses();
 
         assertTrue(classes.isEmpty(),
-                String.format("La classe App ne devrait pas exister, mais les classes suivantes ont été trouvées : %s", classes));
+                "App class should not exist");
     }
 
     private Class<?> findSingleDaggerClass(String nameContaining) {
         return findNonFrameworkClasses("dependency", nameContaining, Object.class)
-                .reduce((first, second) -> fail(String.format("Plusieurs classes contiennent '%s' dans leur nom : [%s, %s]",
+                .reduce((first, second) -> fail(String.format("Multiple classes contain '%s' in their name: [%s, %s]",
                         nameContaining, first.getSimpleName(), second.getSimpleName())))
                 .orElseThrow(() -> new AssertionError(
-                        String.format("Aucune classe trouvée avec '%s' dans le nom.", nameContaining)));
+                        String.format("No class found containing '%s' in name.", nameContaining)));
     }
 
     private Stream<Class<?>> findNonFrameworkClasses(String packageQualifier,
                                                      String simpleNameContaining,
                                                      Class<?> subTypeOf) {
-        log.info("Recherche dans le package {}", BASE_PACKAGE + packageQualifier);
+        log.info("Searching in package {}", BASE_PACKAGE + packageQualifier);
         return ClassQuery.inExactPackage(BASE_PACKAGE + packageQualifier)
                 .withSimpleNameContaining(simpleNameContaining)
                 .withSubTypeOf(subTypeOf)
@@ -122,15 +134,18 @@ public class MT3IntrospectionTests {
 
     private void assertClassesAnnotatedWithInject(List<Class<?>> classes,
                                                   long expectedClassCount) {
-        assertEquals(expectedClassCount, classes.size(), String.format("Nombre de classes incorrect : %d attendu, %d trouvé.",
-                expectedClassCount, classes.size()));
+        // Ensure correct number of classes
+        assertEquals(expectedClassCount, classes.size(),
+                String.format("Incorrect number of classes: expected %d, found %d",
+                        expectedClassCount, classes.size()));
 
+        // Ensure each class has a constructor annotated with @Inject
         classes.stream()
-                .peek(clazz -> log.info("Validation que la classe {} a un constructeur annoté avec @Inject", clazz))
+                .peek(clazz -> log.info("Validating that class {} has a constructor annotated with @Inject", clazz))
                 .map(ConstructorQuery::inClass)
                 .map(ConstructorQuery::findConstructorOrFail)
                 .forEach(constructor -> assertNotNull(constructor.getAnnotation(Inject.class),
-                        String.format("Le constructeur de la classe [%s] devrait être annoté avec @Inject",
+                        String.format("Constructor of class [%s] should be annotated with @Inject",
                                 constructor.getDeclaringClass())));
     }
 }
