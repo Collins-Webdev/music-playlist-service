@@ -85,6 +85,10 @@ public class AddSongToPlaylistRequest {
 
     public static Builder builder() {return new Builder();}
 
+    public String getPlaylistId() {
+        return "";
+    }
+
     public static final class Builder {
         private String id;
         private String asin;

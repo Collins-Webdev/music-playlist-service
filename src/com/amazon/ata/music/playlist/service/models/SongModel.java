@@ -1,8 +1,10 @@
 package com.amazon.ata.music.playlist.service.models;
 
+import com.amazon.ata.music.playlist.service.dynamodb.models.AlbumTrack;
+
 import java.util.Objects;
 
-public class SongModel {
+public class SongModel extends AlbumTrack {
     private String asin;
     private String album;
     private int trackNumber;
@@ -35,7 +37,7 @@ public class SongModel {
         this.album = album;
     }
 
-    public int getTrackNumber() {
+    public Integer getTrackNumber() {
         return trackNumber;
     }
 
@@ -105,6 +107,19 @@ public class SongModel {
             return this;
         }
 
-        public SongModel build() {return new SongModel(this);}
+        // Corrected methods to match ModelConverter usage
+        public Builder withAlbumName(String albumName) {
+            this.album = albumName;
+            return this;
+        }
+
+        public Builder withSongTitle(String songTitle) {
+            this.title = songTitle;
+            return this;
+        }
+
+        public SongModel build() {
+            return new SongModel(this);
+        }
     }
 }

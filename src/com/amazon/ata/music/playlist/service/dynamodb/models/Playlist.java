@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represents a record in the playlists table.
@@ -35,5 +36,18 @@ public class Playlist {
 
     public void setSongList(List<AlbumTrack> songList) {
         this.songList = songList;
+    }
+
+    public void setCustomerId(String customerABC) {
+    }
+
+    public void setTags(Set<String> tag) {
+    }
+
+    public void setName(String aPlaylist) {
+    }
+
+    public void setSongCount(int size) {
+
     }
 }
