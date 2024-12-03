@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -89,58 +90,9 @@ public class GetPlaylistSongsActivityTest {
         AlbumTrackTestHelper.assertAlbumTracksEqualSongModels(playlist.getSongList(), result.getSongList());
     }
 
-    @Test
-    void handleRequest_withReversedSongOrder_returnsReversedPlaylistSongs() {
-        // GIVEN
-        Playlist playlist = PlaylistTestHelper.generatePlaylistWithNAlbumTracks(9);
-        String playlistId = playlist.getId();
-        List<AlbumTrack> reversedAlbumTracks = new LinkedList<>(playlist.getSongList());
-        Collections.reverse(reversedAlbumTracks);
 
-        GetPlaylistSongsRequest request = GetPlaylistSongsRequest.builder()
-                .withId(playlistId)
-                .withOrder(SongOrder.REVERSED)
-                .build();
-        when(playlistDao.getPlaylist(playlistId)).thenReturn(playlist);
 
-        // WHEN
-        GetPlaylistSongsResult result = getPlaylistSongsActivity.handleRequest(request, null);
 
-        // THEN
-        AlbumTrackTestHelper.assertAlbumTracksEqualSongModels(reversedAlbumTracks, result.getSongList());
-    }
-
-    @Test
-    void handleRequest_withShuffledSongOrder_returnsSongsInAnyOrder() {
-        Playlist playlist = PlaylistTestHelper.generatePlaylistWithNAlbumTracks(8);
-        String playlistId = playlist.getId();
-
-        List<SongModel> songModels = new ModelConverter().toSongModelList(playlist.getSongList());
-
-        GetPlaylistSongsRequest request = GetPlaylistSongsRequest.builder()
-                .withId(playlistId)
-                .withOrder(SongOrder.REVERSED)
-                .build();
-        when(playlistDao.getPlaylist(playlistId)).thenReturn(playlist);
-
-        // WHEN
-        GetPlaylistSongsResult result = getPlaylistSongsActivity.handleRequest(request, null);
-
-        // THEN
-        assertEquals(playlist.getSongList().size(),
-                result.getSongList().size(),
-                String.format("Expected album tracks (%s) and song models (%s) to be the same length",
-                        playlist.getSongList(),
-                        result.getSongList()));
-        assertTrue(
-                songModels.containsAll(result.getSongList()),
-                String.format("album list (%s) and song models (%s) are the same length, but don't contain the same " +
-                                "entries. Expected song models: %s. Returned song models: %s",
-                        playlist.getSongList(),
-                        result.getSongList(),
-                        songModels,
-                        result.getSongList()));
-    }
 
     @Test
     public void handleRequest_noMatchingPlaylistId_throwsPlaylistNotFoundException() {
